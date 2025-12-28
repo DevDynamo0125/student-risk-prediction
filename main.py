@@ -1,78 +1,64 @@
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score
-import matplotlib.pyplot as plt
-import seaborn as sns
+from fastapi import FastAPI
+from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+from pymongo import MongoClient
+from datetime import datetime
+
+import joblib
 
 
-# 1. Load dataset
-data = pd.read_csv("student-data.csv")
 
-# 2. Input features (X) and output label (y)
-X = data[
-    ["attendance", "study_hours", "previous_marks", "assignment_completion"]
-]
-y = data["risk"]
 
-# 3. Split data into training and testing
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.25, random_state=42
+# Load trained model
+model = joblib.load("model.pkl")
+
+app = FastAPI(title="Student Risk Prediction API")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # React frontend
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
-
-# 4. Train the AI model
-model = LogisticRegression(max_iter=1000)
-model.fit(X_train, y_train)
-
-# 5. Test model
-predictions = model.predict(X_test)
-
-# 6. Accuracy
-accuracy = accuracy_score(y_test, predictions)
-print("Model accuracy:", accuracy)
-
-# 7. Predict risk for a new student
-new_student = [[70, 4, 60, 65]]
-result = model.predict(new_student)
-
-print("New student at risk?", "YES" if result[0] == 1 else "NO")
-
-plt.figure(figsize=(8, 5))
-sns.scatterplot(
-    data=data,
-    x="attendance",
-    y="previous_marks",
-    hue="risk",
-    palette={0: "green", 1: "red"}
-)
-
-plt.title("Attendance vs Previous Marks")
-plt.xlabel("Attendance (%)")
-plt.ylabel("Previous Marks (%)")
+client = MongoClient("mongodb://localhost:27017")
+db = client["student-ai"]
+collection = db["prediction"]
 
 
-plt.figure(figsize=(8, 5))
-sns.scatterplot(
-    data=data,
-    x="study_hours",
-    y="assignment_completion",
-    hue="risk",
-    palette={0: "green", 1: "red"}
-)
 
-plt.title("Study Hours vs Assignment Completion")
-plt.xlabel("Study Hours")
-plt.ylabel("Assignment Completion (%)")
+# Input schema (what frontend sends)
+class StudentData(BaseModel):
+    attendance: int
+    study_hours: int
+    previous_marks: int
+    assignment_completion: int
 
+@app.get("/")
+def home():
+    return {"message": "Student Risk Prediction API is running"}
 
-features = [
-    "attendance",
-    "study_hours",
-    "previous_marks",
-    "assignment_completion"
-]
+@app.post("/predict")
+def predict_risk(student: StudentData):
+    features = [[
+        student.attendance,
+        student.study_hours,
+        student.previous_marks,
+        student.assignment_completion
+    ]]
 
-data[features].hist(bins=10, figsize=(10, 6))
-plt.suptitle("Feature Distributions")
-plt.show()
+    result = model.predict(features)[0]
+    risk_value = "YES" if result == 1 else "NO"
 
+    # ✅ SAVE TO MONGODB
+    collection.insert_one({
+        "attendance": student.attendance,
+        "study_hours": student.study_hours,
+        "previous_marks": student.previous_marks,
+        "assignment_completion": student.assignment_completion,
+        "risk": risk_value,
+        "created_at": datetime.utcnow()
+    })
+
+    return {
+        "risk": risk_value
+    }

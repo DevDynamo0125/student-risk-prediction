@@ -1,0 +1,112 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+/* THEME CONTAINERS */
+.app.light {
+  background: #f4f6f8;
+  color: #111827;
+}
+
+.app.dark {
+  background: #0f172a;
+  color: #e5e7eb;
+}
+
+/* CENTERING */
+.container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* CARD */
+.card {
+  background: white;
+  padding: 30px;
+  width: 350px;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.app.dark .card {
+  background: #1e293b;
+}
+
+/* TITLE */
+.card h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* INPUTS */
+.card input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 12px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.app.dark .card input {
+  background: #0f172a;
+  border: 1px solid #334155;
+  color: white;
+}
+
+/* BUTTON */
+.card button {
+  width: 100%;
+  padding: 10px;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.card button:hover {
+  background-color: #1e40af;
+}
+
+/* RESULT */
+.result {
+  margin-top: 20px;
+  padding: 12px;
+  border-radius: 5px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.result.safe {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.result.risk {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* DARK MODE RESULT OVERRIDES */
+.app.dark .result.safe {
+  background: #064e3b;
+  color: #d1fae5;
+}
+
+.app.dark .result.risk {
+  background: #7f1d1d;
+  color: #fee2e2;
+}
+
+/* TOGGLE */
+.toggle {
+  text-align: right;
+  margin-bottom: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
